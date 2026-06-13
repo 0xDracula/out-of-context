@@ -17,8 +17,7 @@ enum SubmissionStatus {
 }
 
 model User {
-  id                    String   @id @default(uuid())
-  slackId               String   @unique
+  slackId               String   @id
   isTrusted             Boolean  @default(false)
   isBanned              Boolean  @default(false)
   approvedCount         Int      @default(0)
@@ -40,7 +39,7 @@ model Submission {
   moderatorNotes String?
   
   submitterId    String
-  submitter      User             @relation(fields: [submitterId], references: [id])
+  submitter      User             @relation(fields: [submitterId], references: [slackId])
   
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -63,7 +62,7 @@ model ModerationAction {
 model Ban {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [slackId])
   reason    String
   expiresAt DateTime?
   createdAt DateTime @default(now())
@@ -72,7 +71,7 @@ model Ban {
 model Warning {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [slackId])
   reason    String
   createdAt DateTime @default(now())
 }
@@ -80,7 +79,7 @@ model Warning {
 model Cooldown {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [slackId])
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
