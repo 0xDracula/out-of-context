@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED_NOT_OOC
+  REJECTED_EXPLICIT
+}
+
+model User {
+  id                    String   @id @default(uuid())
+  slackId               String   @unique
+  isTrusted             Boolean  @default(false)
+  isBanned              Boolean  @default(false)
+  approvedCount         Int      @default(0)
+  rejectedCount         Int      @default(0)
+  explicitRejectionCount Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  submissions           Submission[]
+  bans                  Ban[]
+  warnings              Warning[]
+  cooldowns             Cooldown[]
+}
+
+model Submission {
+  id             String           @id @default(uuid())
+  slackLink      String
+  status         SubmissionStatus @default(PENDING)
+  moderatorNotes String?
+  
+  submitterId    String
+  submitter      User             @relation(fields: [submitterId], references: [id])
+  
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  moderationActions ModerationAction[]
+}
+
+model ModerationAction {
+  id           String     @id @default(uuid())
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id])
+  
+  moderatorId  String
+  action       String     // e.g., "APPROVE", "REJECT_NSFW", "REJECT_OOC"
+  notes        String?
+  
+  createdAt    DateTime   @default(now())
+}
+
+model Ban {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  reason    String
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model Warning {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Cooldown {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String   // e.g., "CONFIG_CHANGE", "USER_BAN", "TRUST_GRANT"
+  details   Json
+  actorId   String   // The Slack ID of the moderator/admin
+  createdAt DateTime @default(now())
+}

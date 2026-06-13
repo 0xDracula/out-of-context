@@ -22,6 +22,7 @@
     "typescript"
   ],
   "dependencies": {
+    "@prisma/client": "^7.8.0",
     "@slack/bolt": "^4.7.3",
     "dotenv": "~17.4.2"
   },
