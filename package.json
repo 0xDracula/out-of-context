@@ -1,0 +1,33 @@
+{
+  "name": "out-of-ontext",
+  "version": "0.0.1",
+  "description": "Out of Context (OOC)",
+  "main": "dist/app.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "start": "node ./dist/app.js",
+    "dev": "tsx watch app.ts",
+    "lint": "npx @biomejs/biome check *.ts src listeners tests",
+    "lint:fix": "npx @biomejs/biome check --write *.ts listeners tests",
+    "test": "npm run build && npm run lint && node --import tsx --test"
+  },
+  "author": "Slack Technologies, LLC",
+  "license": "MIT",
+  "keywords": [
+    "slack",
+    "bolt",
+    "slackapi",
+    "typescript"
+  ],
+  "dependencies": {
+    "@slack/bolt": "^4.7.3",
+    "dotenv": "~17.4.2"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}
