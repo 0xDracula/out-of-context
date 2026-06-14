@@ -1,6 +1,7 @@
 import type { WebClient } from '@slack/web-api';
 import { config } from '../../config/index.js';
 import { SubmissionStatus } from '../../domain/entities/Submission.js';
+import { User } from '../../domain/entities/User.js';
 import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
 
@@ -63,6 +64,8 @@ export class ReviewSubmission {
       } catch (error) {
         console.error('Failed to notify submitter:', error);
       }
+
+      await this.maybePromoteToTrusted(submitter.slackId);
     } else {
       const isExplicit = request.action === 'REJECT_EXPLICIT';
       submission.reject(isExplicit, request.notes);
@@ -88,5 +91,22 @@ export class ReviewSubmission {
     }
 
     return { success: true, message: `Submission ${request.action.toLowerCase()}d successfully.` };
+  }
+
+  private async maybePromoteToTrusted(slackId: string): Promise<void> {
+    const user = await this.userRepository.findBySlackId(slackId);
+    if (!user || user.isTrusted || !user.isEligibleForTrust(config)) return;
+
+    const promoted = new User({ ...user.toJSON(), isTrusted: true });
+    await this.userRepository.save(promoted);
+
+    try {
+      await this.slackClient.chat.postMessage({
+        channel: slackId,
+        text: `Congratulations! You've been automatically promoted to *Trusted Contributor* status.\n\nYour future submissions will be posted directly to <#${config.slack.oocChannelId}> without waiting for moderator review.`,
+      });
+    } catch (error) {
+      console.error('Failed to notify user of trust promotion:', error);
+    }
   }
 }
