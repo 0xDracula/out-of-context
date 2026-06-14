@@ -4,7 +4,7 @@ import { SubmissionStatus } from '../../domain/entities/Submission.js';
 import { User } from '../../domain/entities/User.js';
 import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
-import { fetchUserProfile } from '../../shared/utils/slack-user-profile.js';
+import { postToOocChannel } from '../../shared/utils/ooc-post.js';
 
 export interface ReviewSubmissionRequest {
   submissionId: string;
@@ -48,14 +48,7 @@ export class ReviewSubmission {
       await this.userRepository.updateStats(submitter.slackId, { approved: 1 });
 
       try {
-        const profile = await fetchUserProfile(this.slackClient, submitter.slackId);
-        await this.slackClient.chat.postMessage({
-          channel: config.slack.oocChannelId,
-          text: submission.slackLink,
-          username: profile.displayName,
-          icon_url: profile.iconUrl,
-          unfurl_links: true,
-        });
+        await postToOocChannel(this.slackClient, submission.slackLink, submitter.slackId);
       } catch (error) {
         console.error('Failed to post to OOC channel:', error);
       }

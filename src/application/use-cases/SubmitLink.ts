@@ -4,7 +4,7 @@ import { Submission, SubmissionStatus } from '../../domain/entities/Submission.j
 import { User, UserRole } from '../../domain/entities/User.js';
 import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
-import { fetchUserProfile } from '../../shared/utils/slack-user-profile.js';
+import { postToOocChannel } from '../../shared/utils/ooc-post.js';
 
 export interface SubmitLinkRequest {
   slackId: string;
@@ -61,15 +61,7 @@ export class SubmitLink {
 
       if (isTrusted) {
         try {
-          const profile = await fetchUserProfile(this.slackClient, user.slackId);
-          await this.slackClient.chat.postMessage({
-            channel: config.slack.oocChannelId,
-            text: submission.slackLink,
-            username: profile.displayName,
-            icon_url: profile.iconUrl,
-            unfurl_links: true,
-          });
-
+          await postToOocChannel(this.slackClient, submission.slackLink, user.slackId);
           await this.userRepository.updateStats(user.slackId, { approved: 1 });
         } catch (error) {
           console.error('Failed to post trusted submission:', error);

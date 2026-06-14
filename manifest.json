@@ -60,8 +60,10 @@
         "chat:write.customize",
         "users:read",
         "channels:history",
+        "channels:join",
         "groups:history",
         "mpim:history",
+        "links:read",
         "commands"
       ]
     }
