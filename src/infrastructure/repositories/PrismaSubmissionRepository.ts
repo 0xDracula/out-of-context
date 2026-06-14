@@ -45,12 +45,13 @@ export class PrismaSubmissionRepository implements ISubmissionRepository {
       moderatorNotes: saved.moderatorNotes || undefined,
       createdAt: saved.createdAt,
       updatedAt: saved.updatedAt,
+      deletedAt: saved.deletedAt || undefined,
     });
   }
 
   async findBySubmitterId(submitterId: string): Promise<Submission[]> {
     const submissions = await db.submission.findMany({
-      where: { submitterId },
+      where: { submitterId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -64,13 +65,14 @@ export class PrismaSubmissionRepository implements ISubmissionRepository {
           moderatorNotes: s.moderatorNotes || undefined,
           createdAt: s.createdAt,
           updatedAt: s.updatedAt,
+          deletedAt: s.deletedAt || undefined,
         }),
     );
   }
 
   async getPendingQueue(): Promise<Submission[]> {
     const submissions = await db.submission.findMany({
-      where: { status: SubmissionStatus.PENDING },
+      where: { status: SubmissionStatus.PENDING, deletedAt: null },
       orderBy: { createdAt: 'asc' },
     });
 
@@ -84,13 +86,15 @@ export class PrismaSubmissionRepository implements ISubmissionRepository {
           moderatorNotes: s.moderatorNotes || undefined,
           createdAt: s.createdAt,
           updatedAt: s.updatedAt,
+          deletedAt: s.deletedAt || undefined,
         }),
     );
   }
 
   async delete(id: string): Promise<void> {
-    await db.submission.delete({
+    await db.submission.update({
       where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 }

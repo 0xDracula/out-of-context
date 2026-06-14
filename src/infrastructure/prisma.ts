@@ -1,8 +1,8 @@
 import 'dotenv/config';
-import * as dotenv from 'dotenv';
-import { expand } from 'dotenv-expand';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
+import { expand } from 'dotenv-expand';
 import pg from 'pg';
 
 const myEnv = dotenv.config();

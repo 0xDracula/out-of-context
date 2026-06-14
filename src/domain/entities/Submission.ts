@@ -13,6 +13,7 @@ export interface SubmissionProps {
   moderatorNotes?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  deletedAt?: Date;
 }
 
 export class Submission {
@@ -34,6 +35,9 @@ export class Submission {
   }
   get submitterId(): string {
     return this.props.submitterId;
+  }
+  get deletedAt(): Date | undefined {
+    return this.props.deletedAt;
   }
 
   private validateLink(link: string) {

@@ -57,14 +57,14 @@ export class SubmitLink {
         return {
           submissionId: savedSubmission.id,
           status: 'approved',
-          message: 'Your submission has been automatically approved and posted! (Trusted User)',
+          message: 'Your submission has been automatically approved and posted! (Trusted User). stay a goodboy',
         };
       }
 
       return {
         submissionId: savedSubmission.id,
         status: 'pending',
-        message: 'Your submission has been received and is waiting for moderator review.',
+        message: "Your submission has been received and is waiting for moderator review. dw won't take long",
       };
     } catch (error: any) {
       return {

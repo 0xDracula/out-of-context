@@ -43,6 +43,7 @@ model Submission {
   
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  deletedAt      DateTime?
 
   moderationActions ModerationAction[]
 }
