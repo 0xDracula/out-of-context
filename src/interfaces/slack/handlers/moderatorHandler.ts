@@ -1,4 +1,5 @@
 import type { App } from '@slack/bolt';
+import type { WebClient } from '@slack/web-api';
 import { ReviewSubmission } from '../../../application/use-cases/ReviewSubmission.js';
 import { UpdateUserRole } from '../../../application/use-cases/UpdateUserRole.js';
 import { UpdateUserTrust } from '../../../application/use-cases/UpdateUserTrust.js';
@@ -8,6 +9,28 @@ import { PrismaUserRepository } from '../../../infrastructure/repositories/Prism
 
 const userRepository = new PrismaUserRepository();
 const submissionRepository = new PrismaSubmissionRepository();
+
+// handles: <@U123456>, <@U123456|name>, bare user ID, or @displayname fallback.
+async function resolveUserId(text: string, client: WebClient): Promise<string | undefined> {
+  const trimmed = text.trim();
+  if (!trimmed) return undefined;
+
+  const mentionMatch = trimmed.match(/^<@([A-Z0-9]+)(?:\|[^>]*)?>$/);
+  if (mentionMatch) return mentionMatch[1];
+
+  if (/^[A-Z0-9]{8,12}$/.test(trimmed)) return trimmed;
+
+  const name = trimmed.replace(/^@/, '').toLowerCase();
+  try {
+    const result = await client.users.list({});
+    const match = result.members?.find(
+      (m) => m.name?.toLowerCase() === name || m.profile?.display_name?.toLowerCase() === name,
+    );
+    return match?.id;
+  } catch {
+    return undefined;
+  }
+}
 
 export const registerModeratorHandlers = (app: App) => {
   const reviewSubmission = new ReviewSubmission(userRepository, submissionRepository, app.client);
@@ -28,9 +51,13 @@ export const registerModeratorHandlers = (app: App) => {
    */
   app.command('/b-mod-queue', async ({ ack, body, respond }) => {
     await ack();
+    if (!body.channel_id?.startsWith('D')) {
+      await respond({ text: 'This command can only be used in a DM with the bot.', response_type: 'ephemeral' });
+      return;
+    }
 
     if (!(await isAdmin(body.user_id))) {
-      await respond('⛔ You do not have permission to access the moderation queue.');
+      await respond('You do not have permission to access the moderation queue.');
       return;
     }
 
@@ -108,7 +135,18 @@ export const registerModeratorHandlers = (app: App) => {
     await ack();
 
     if (!(await isAdmin(body.user_id))) {
-      await respond('⛔ You do not have permission to manage user trust.');
+      await respond('You do not have permission to manage user trust.');
+      return;
+    }
+
+    const targetUserId = await resolveUserId(body.text, client);
+    if (targetUserId) {
+      const result = await new UpdateUserTrust(userRepository, client).execute({
+        slackId: targetUserId,
+        isTrusted: true,
+        moderatorId: body.user_id,
+      });
+      await respond(result.message);
       return;
     }
 
@@ -146,7 +184,7 @@ export const registerModeratorHandlers = (app: App) => {
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: 'ℹ️ The user will receive a notification DM when trust is granted.',
+                  text: 'The user will receive a notification DM when trust is granted.',
                 },
               ],
             },
@@ -165,7 +203,18 @@ export const registerModeratorHandlers = (app: App) => {
     await ack();
 
     if (!(await isAdmin(body.user_id))) {
-      await respond('⛔ You do not have permission to manage user trust.');
+      await respond('You do not have permission to manage user trust.');
+      return;
+    }
+
+    const targetUserId = await resolveUserId(body.text, client);
+    if (targetUserId) {
+      const result = await new UpdateUserTrust(userRepository, client).execute({
+        slackId: targetUserId,
+        isTrusted: false,
+        moderatorId: body.user_id,
+      });
+      await respond(result.message);
       return;
     }
 
@@ -203,7 +252,7 @@ export const registerModeratorHandlers = (app: App) => {
               elements: [
                 {
                   type: 'mrkdwn',
-                  text: 'ℹ️ The user will receive a notification DM when trust is revoked.',
+                  text: 'The user will receive a notification DM when trust is revoked.',
                 },
               ],
             },
@@ -222,7 +271,18 @@ export const registerModeratorHandlers = (app: App) => {
     await ack();
 
     if (!(await isSuperAdmin(body.user_id))) {
-      await respond('⛔ Only Super Admins can grant admin privileges.');
+      await respond('Only Super Admins can grant admin privileges.');
+      return;
+    }
+
+    const targetUserId = await resolveUserId(body.text, client);
+    if (targetUserId) {
+      const result = await updateUserRole.execute({
+        targetSlackId: targetUserId,
+        newRole: UserRole.ADMIN,
+        actorSlackId: body.user_id,
+      });
+      await respond(result.message);
       return;
     }
 
@@ -274,7 +334,18 @@ export const registerModeratorHandlers = (app: App) => {
     await ack();
 
     if (!(await isSuperAdmin(body.user_id))) {
-      await respond('⛔ Only Super Admins can revoke admin privileges.');
+      await respond('Only Super Admins can revoke admin privileges.');
+      return;
+    }
+
+    const targetUserId = await resolveUserId(body.text, client);
+    if (targetUserId) {
+      const result = await updateUserRole.execute({
+        targetSlackId: targetUserId,
+        newRole: UserRole.USER,
+        actorSlackId: body.user_id,
+      });
+      await respond(result.message);
       return;
     }
 
@@ -362,7 +433,7 @@ export const registerModeratorHandlers = (app: App) => {
     await ack();
 
     const metadata = JSON.parse(view.private_metadata);
-    const action = metadata.action; // 'GRANT' or 'REVOKE'
+    const action = metadata.action;
     const moderatorId = body.user.id;
 
     if (!(await isAdmin(moderatorId))) {
@@ -414,7 +485,7 @@ export const registerModeratorHandlers = (app: App) => {
   app.action('approve_submission', async ({ ack, body, action, respond }) => {
     await ack();
     if (!(await isAdmin(body.user.id))) {
-      await respond('⛔ You do not have permission to review submissions.');
+      await respond('You do not have permission to review submissions.');
       return;
     }
     const result = await handleReview((action as any).value, body.user.id, 'APPROVE');
@@ -424,7 +495,7 @@ export const registerModeratorHandlers = (app: App) => {
   app.action('reject_ooc', async ({ ack, body, action, respond }) => {
     await ack();
     if (!(await isAdmin(body.user.id))) {
-      await respond('⛔ You do not have permission to review submissions.');
+      await respond('You do not have permission to review submissions.');
       return;
     }
     const result = await handleReview((action as any).value, body.user.id, 'REJECT_OOC');
@@ -434,7 +505,7 @@ export const registerModeratorHandlers = (app: App) => {
   app.action('reject_explicit', async ({ ack, body, action, respond }) => {
     await ack();
     if (!(await isAdmin(body.user.id))) {
-      await respond('⛔ You do not have permission to review submissions.');
+      await respond('You do not have permission to review submissions.');
       return;
     }
     const result = await handleReview((action as any).value, body.user.id, 'REJECT_EXPLICIT');

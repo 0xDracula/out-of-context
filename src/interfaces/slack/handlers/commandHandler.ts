@@ -15,6 +15,10 @@ export const registerCommandHandlers = (app: App) => {
    */
   app.command('/b-status', async ({ ack, body, respond }) => {
     await ack();
+    if (!body.channel_id?.startsWith('D')) {
+      await respond({ text: 'This command can only be used in a DM with the bot.', response_type: 'ephemeral' });
+      return;
+    }
     const slackId = body.user_id;
 
     const status = await getUserStatus.execute(slackId);
