@@ -4,7 +4,6 @@ import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionR
 import { fetchOriginalMessage } from './slack-message-fetcher.js';
 import { fetchUserProfile, type SlackUserProfile } from './slack-user-profile.js';
 
-
 let _helperClient: WebClient | undefined;
 
 function getHelperClient(): WebClient | undefined {
@@ -12,7 +11,6 @@ function getHelperClient(): WebClient | undefined {
   if (!_helperClient) _helperClient = new WebClient(config.slack.helperBotToken);
   return _helperClient;
 }
-
 
 interface OriginalContent {
   text: string;
@@ -29,11 +27,10 @@ interface PostTask {
   submissionId?: string;
 }
 
-
 const taskQueue: PostTask[] = [];
 let isProcessing = false;
 
-const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export function postToOocChannel(
   client: WebClient,
@@ -66,12 +63,10 @@ async function drainQueue(): Promise<void> {
   isProcessing = false;
 }
 
-
 async function runPost(task: PostTask): Promise<void> {
   const { client, slackLink, submitterId, originalContent, repo, submissionId } = task;
 
-  const submissionNumber =
-    repo && submissionId ? await repo.assignNextNumber(submissionId) : undefined;
+  const submissionNumber = repo && submissionId ? await repo.assignNextNumber(submissionId) : undefined;
 
   const content = originalContent ?? (await resolveContent(client, slackLink));
 
@@ -82,10 +77,7 @@ async function runPost(task: PostTask): Promise<void> {
   }
 }
 
-async function resolveContent(
-  client: WebClient,
-  slackLink: string,
-): Promise<OriginalContent | undefined> {
+async function resolveContent(client: WebClient, slackLink: string): Promise<OriginalContent | undefined> {
   const fetched = await fetchOriginalMessage(client, slackLink);
   if (fetched?.authorId && (fetched.text || fetched.imageUrl)) {
     return { text: fetched.text, authorId: fetched.authorId, imageUrl: fetched.imageUrl };
@@ -121,17 +113,19 @@ async function postWithContent(
   }
 
   await sendOocMessage(client, submitter, {
-    attachments: [{
-      color: '#DDDDDD',
-      author_name: author.displayName,
-      author_icon: author.iconUrl,
-      author_link: slackLink,
-      text: content.text || undefined,
-      image_url: content.imageUrl,
-      footer: footerText,
-      ts: msgTs,
-      mrkdwn_in: ['text'],
-    }],
+    attachments: [
+      {
+        color: '#DDDDDD',
+        author_name: author.displayName,
+        author_icon: author.iconUrl,
+        author_link: slackLink,
+        text: content.text || undefined,
+        image_url: content.imageUrl,
+        footer: footerText,
+        ts: msgTs,
+        mrkdwn_in: ['text'],
+      },
+    ],
   });
 }
 
@@ -146,16 +140,13 @@ async function postFallback(
   await sendOocMessage(client, submitter, { text: slackLink, unfurl_links: true });
 }
 
-
 function parseSlackLink(link: string): { msgTs?: number; footerText: string } {
   const isFileLink = link.includes('/files/');
   const tsMatch = !isFileLink ? link.match(/\/p(\d{10})/) : null;
-  const msgTs = tsMatch ? parseInt(tsMatch[1]) : undefined;
+  const msgTs = tsMatch ? Number.parseInt(tsMatch[1]) : undefined;
   const channelMatch = !isFileLink ? link.match(/\/archives\/([A-Z0-9]+)\//) : null;
   const channelId = channelMatch?.[1];
-  const footerText = channelId?.startsWith('C')
-    ? `Posted in <#${channelId}>`
-    : 'Posted in a Direct Message';
+  const footerText = channelId?.startsWith('C') ? `Posted in <#${channelId}>` : 'Posted in a Direct Message';
   return { msgTs, footerText };
 }
 

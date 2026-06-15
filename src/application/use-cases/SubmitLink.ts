@@ -74,7 +74,14 @@ export class SubmitLink {
                   imageUrl: request.originalImageUrl,
                 }
               : undefined;
-          await postToOocChannel(this.slackClient, submission.slackLink, user.slackId, originalContent, this.submissionRepository, savedSubmission.id);
+          await postToOocChannel(
+            this.slackClient,
+            submission.slackLink,
+            user.slackId,
+            originalContent,
+            this.submissionRepository,
+            savedSubmission.id,
+          );
           await this.userRepository.updateStats(user.slackId, { approved: 1 });
         } catch (error) {
           console.error('Failed to post trusted submission:', error);

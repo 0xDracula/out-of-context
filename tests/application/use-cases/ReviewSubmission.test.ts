@@ -31,6 +31,7 @@ describe('ReviewSubmission Use Case', () => {
     const mockSubRepo = {
       findById: mock.fn(async () => mockSubmission),
       save: mock.fn(async (s) => s),
+      assignNextNumber: mock.fn(async () => 1),
     };
     const mockSlackClient = {
       chat: {

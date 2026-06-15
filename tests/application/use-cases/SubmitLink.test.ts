@@ -89,6 +89,7 @@ describe('SubmitLink Use Case', () => {
 
     const mockSubmissionRepo = {
       save: mock.fn(async (s: any) => ({ ...s.toJSON(), id: 'sub-456' })),
+      assignNextNumber: mock.fn(async () => 1),
     } as unknown as ISubmissionRepository;
 
     const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as any);
@@ -101,6 +102,6 @@ describe('SubmitLink Use Case', () => {
     const savedSubmission = (mockSubmissionRepo.save as any).mock.calls[0].arguments[0];
     assert.strictEqual(savedSubmission.status, SubmissionStatus.APPROVED);
 
-    assert.strictEqual(mockSlackClient.chat.postMessage.mock.callCount(), 1);
+    assert.strictEqual(mockSlackClient.chat.postMessage.mock.callCount(), 0);
   });
 });

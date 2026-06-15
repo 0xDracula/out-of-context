@@ -6,10 +6,7 @@ export interface FetchedMessage {
   imageUrl?: string;
 }
 
-export async function fetchOriginalMessage(
-  client: WebClient,
-  slackLink: string,
-): Promise<FetchedMessage | null> {
+export async function fetchOriginalMessage(client: WebClient, slackLink: string): Promise<FetchedMessage | null> {
   const match = slackLink.match(/\/archives\/([A-Z0-9]+)\/p(\d{10})(\d{6})/);
   if (!match) return null;
 
@@ -20,8 +17,7 @@ export async function fetchOriginalMessage(
     if (channelId.startsWith('C')) {
       try {
         await client.conversations.join({ channel: channelId });
-      } catch {
-      }
+      } catch {}
     }
 
     const result = await client.conversations.history({
@@ -36,9 +32,7 @@ export async function fetchOriginalMessage(
     if (!message) return null;
 
     const file = (message as any).files?.[0];
-    const imageUrl = file?.mimetype?.startsWith('image/')
-      ? (file.url_private as string | undefined)
-      : undefined;
+    const imageUrl = file?.mimetype?.startsWith('image/') ? (file.url_private as string | undefined) : undefined;
 
     return {
       text: message.text || '',

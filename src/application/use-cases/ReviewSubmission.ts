@@ -56,7 +56,14 @@ export class ReviewSubmission {
                 imageUrl: submission.originalImageUrl,
               }
             : undefined;
-        await postToOocChannel(this.slackClient, submission.slackLink, submitter.slackId, originalContent, this.submissionRepository, submission.id);
+        await postToOocChannel(
+          this.slackClient,
+          submission.slackLink,
+          submitter.slackId,
+          originalContent,
+          this.submissionRepository,
+          submission.id,
+        );
       } catch (error) {
         console.error('Failed to post to OOC channel:', error);
       }
