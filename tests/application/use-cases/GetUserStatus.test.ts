@@ -3,13 +3,18 @@ import { describe, it, mock } from 'node:test';
 import { GetUserStatus } from '../../../src/application/use-cases/GetUserStatus.js';
 import { SubmissionStatus } from '../../../src/domain/entities/Submission.js';
 import { User, UserRole } from '../../../src/domain/entities/User.js';
+import type { ISubmissionRepository } from '../../../src/domain/interfaces/ISubmissionRepository.js';
+import type { IUserRepository } from '../../../src/domain/interfaces/IUserRepository.js';
 
 describe('GetUserStatus Use Case', () => {
   it('should return empty stats for unregistered user', async () => {
     const mockUserRepo = { findBySlackId: mock.fn(async () => null) };
     const mockSubRepo = {};
 
-    const useCase = new GetUserStatus(mockUserRepo as any, mockSubRepo as any);
+    const useCase = new GetUserStatus(
+      mockUserRepo as unknown as IUserRepository,
+      mockSubRepo as unknown as ISubmissionRepository,
+    );
     const response = await useCase.execute('U123');
 
     assert.strictEqual(response.isRegistered, false);
@@ -36,7 +41,10 @@ describe('GetUserStatus Use Case', () => {
       getPendingQueue: mock.fn(async () => [{ id: 'other-sub' }, { id: 'sub-1' }]),
     };
 
-    const useCase = new GetUserStatus(mockUserRepo as any, mockSubRepo as any);
+    const useCase = new GetUserStatus(
+      mockUserRepo as unknown as IUserRepository,
+      mockSubRepo as unknown as ISubmissionRepository,
+    );
     const response = await useCase.execute('U123');
 
     assert.strictEqual(response.isRegistered, true);

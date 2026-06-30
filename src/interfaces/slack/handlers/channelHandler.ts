@@ -16,7 +16,8 @@ export const registerChannelHandler = (app: App) => {
   if (!config.slack.oocChannelId) return;
 
   app.message(async ({ message, client, logger }) => {
-    const msg = message as any;
+    type Msg = { channel?: string; subtype?: string; bot_id?: string; thread_ts?: string; user?: string; ts: string };
+    const msg = message as Msg;
 
     if (msg.channel !== config.slack.oocChannelId) return;
     if (msg.subtype || msg.bot_id) return;

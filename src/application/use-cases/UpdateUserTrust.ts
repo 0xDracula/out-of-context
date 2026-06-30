@@ -1,7 +1,7 @@
 import type { WebClient } from '@slack/web-api';
 import { User, UserRole } from '../../domain/entities/User.js';
-import { logger } from '../../shared/utils/logger.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
+import { logger } from '../../shared/utils/logger.js';
 
 export interface UpdateUserTrustRequest {
   slackId: string;
@@ -18,7 +18,7 @@ export class UpdateUserTrust {
   constructor(
     private userRepository: IUserRepository,
     private slackClient: WebClient,
-  ) { }
+  ) {}
 
   async execute(request: UpdateUserTrustRequest): Promise<UpdateUserTrustResponse> {
     let user = await this.userRepository.findBySlackId(request.slackId);
@@ -54,10 +54,11 @@ export class UpdateUserTrust {
     try {
       await this.slackClient.chat.postMessage({
         channel: request.slackId,
-        text: `Your "Trusted User" status has been *${statusText}* by a moderator.\n${request.isTrusted
+        text: `Your "Trusted User" status has been *${statusText}* by a moderator.\n${
+          request.isTrusted
             ? 'You can now post links that bypass the moderation queue!'
             : 'Your submissions will now require moderator approval.'
-          }`,
+        }`,
       });
     } catch (error) {
       logger.error('Failed to notify user of trust change:', error);

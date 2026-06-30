@@ -1,4 +1,4 @@
-import { createServer } from 'http';
+import { createServer } from 'node:http';
 import { WebClient } from '@slack/web-api';
 
 export function startOAuthServer(port = 3001): void {
@@ -10,13 +10,13 @@ export function startOAuthServer(port = 3001): void {
   const redirectUri = process.env.SLACK_REDIRECT_URI ?? `http://localhost:${port}/slack/oauth_redirect`;
 
   const server = createServer(async (req, res) => {
-    const url = new URL(req.url!, `http://localhost:${port}`);
+    const url = new URL(req.url ?? '/', `http://localhost:${port}`);
 
     if (url.pathname === '/slack/install') {
       const oauthUrl =
-        `https://slack.com/oauth/v2/authorize` +
+        'https://slack.com/oauth/v2/authorize' +
         `?client_id=${clientId}` +
-        `&user_scope=chat:write` +
+        '&user_scope=chat:write' +
         `&redirect_uri=${encodeURIComponent(redirectUri)}`;
       res.writeHead(302, { Location: oauthUrl });
       res.end();
@@ -39,8 +39,10 @@ export function startOAuthServer(port = 3001): void {
           redirect_uri: redirectUri,
         });
 
-        const userToken = (result as any).authed_user?.access_token as string | undefined;
-        const userId = (result as any).authed_user?.id as string | undefined;
+        type OAuthResult = { authed_user?: { access_token?: string; id?: string } };
+        const authedUser = (result as OAuthResult).authed_user;
+        const userToken = authedUser?.access_token;
+        const userId = authedUser?.id;
 
         console.log('\n[oauth] OOC user authorized!');
         console.log(`[oauth] User ID: ${userId}`);
@@ -49,8 +51,8 @@ export function startOAuthServer(port = 3001): void {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(
           `<h2>Authorized!</h2><p>User: <code>${userId}</code></p>` +
-          `<p>Add to your <code>.env</code> and restart:</p>` +
-          `<pre>SLACK_USER_TOKEN=${userToken}</pre>`,
+            '<p>Add to your <code>.env</code> and restart:</p>' +
+            `<pre>SLACK_USER_TOKEN=${userToken}</pre>`,
         );
       } catch (error) {
         console.error('[oauth] Exchange failed:', error);

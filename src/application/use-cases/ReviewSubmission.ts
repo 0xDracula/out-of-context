@@ -1,10 +1,10 @@
 import type { WebClient } from '@slack/web-api';
 import { config } from '../../config/index.js';
-import { logger } from '../../shared/utils/logger.js';
 import { SubmissionStatus } from '../../domain/entities/Submission.js';
 import { User } from '../../domain/entities/User.js';
 import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
+import { logger } from '../../shared/utils/logger.js';
 import { postToOocChannel } from '../../shared/utils/ooc-post.js';
 
 export interface ReviewSubmissionRequest {
@@ -24,7 +24,7 @@ export class ReviewSubmission {
     private userRepository: IUserRepository,
     private submissionRepository: ISubmissionRepository,
     private slackClient: WebClient,
-  ) { }
+  ) {}
 
   async execute(request: ReviewSubmissionRequest): Promise<ReviewSubmissionResponse> {
     const submission = await this.submissionRepository.findById(request.submissionId);
@@ -52,10 +52,10 @@ export class ReviewSubmission {
         const originalContent =
           submission.originalText || submission.originalImageUrl
             ? {
-              text: submission.originalText ?? '',
-              authorId: submission.originalAuthorId ?? submission.submitterId,
-              imageUrl: submission.originalImageUrl,
-            }
+                text: submission.originalText ?? '',
+                authorId: submission.originalAuthorId ?? submission.submitterId,
+                imageUrl: submission.originalImageUrl,
+              }
             : undefined;
         postToOocChannel(
           this.slackClient,

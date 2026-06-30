@@ -1,9 +1,9 @@
 import type { WebClient } from '@slack/web-api';
 import { Submission, SubmissionStatus } from '../../domain/entities/Submission.js';
-import { logger } from '../../shared/utils/logger.js';
 import { User, UserRole } from '../../domain/entities/User.js';
 import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
+import { logger } from '../../shared/utils/logger.js';
 import { postToOocChannel } from '../../shared/utils/ooc-post.js';
 
 export interface SubmitLinkRequest {
@@ -25,7 +25,7 @@ export class SubmitLink {
     private userRepository: IUserRepository,
     private submissionRepository: ISubmissionRepository,
     private slackClient: WebClient,
-  ) { }
+  ) {}
 
   async execute(request: SubmitLinkRequest): Promise<SubmitLinkResponse> {
     try {
@@ -70,10 +70,10 @@ export class SubmitLink {
           const originalContent =
             request.originalText || request.originalImageUrl
               ? {
-                text: request.originalText ?? '',
-                authorId: request.originalAuthorId ?? user.slackId,
-                imageUrl: request.originalImageUrl,
-              }
+                  text: request.originalText ?? '',
+                  authorId: request.originalAuthorId ?? user.slackId,
+                  imageUrl: request.originalImageUrl,
+                }
               : undefined;
           postToOocChannel(
             this.slackClient,
@@ -104,9 +104,10 @@ export class SubmitLink {
       logger.error('[SubmitLink] error:', error);
       return {
         status: 'error',
-        message: error instanceof Error && error.message === 'Invalid Slack message link'
-          ? 'That doesn\'t look like a valid Slack message link.'
-          : 'Something went wrong, please try again.',
+        message:
+          error instanceof Error && error.message === 'Invalid Slack message link'
+            ? "That doesn't look like a valid Slack message link."
+            : 'Something went wrong, please try again.',
       };
     }
   }

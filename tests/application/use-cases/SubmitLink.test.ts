@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
+import type { WebClient } from '@slack/web-api';
 import { SubmitLink } from '../../../src/application/use-cases/SubmitLink.js';
 import { SubmissionStatus } from '../../../src/domain/entities/Submission.js';
 import { User, UserRole } from '../../../src/domain/entities/User.js';
@@ -22,21 +23,21 @@ describe('SubmitLink Use Case', () => {
     } as unknown as IUserRepository;
 
     const mockSubmissionRepo = {
-      save: mock.fn(async (s: any) => {
+      save: mock.fn(async (s: { toJSON(): object }) => {
         const data = s.toJSON();
         return { ...data, id: 'sub-123' };
       }),
     } as unknown as ISubmissionRepository;
 
-    const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as any);
+    const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as unknown as WebClient);
     const response = await useCase.execute({
       slackId: 'U123',
       slackLink: validLink,
     });
 
     assert.strictEqual(response.status, 'pending');
-    assert.strictEqual((mockUserRepo.save as any).mock.callCount(), 1);
-    assert.strictEqual((mockSubmissionRepo.save as any).mock.callCount(), 1);
+    assert.strictEqual((mockUserRepo.save as unknown as { mock: { callCount(): number } }).mock.callCount(), 1);
+    assert.strictEqual((mockSubmissionRepo.save as unknown as { mock: { callCount(): number } }).mock.callCount(), 1);
   });
 
   it('should reject submission if user is banned', async () => {
@@ -60,14 +61,14 @@ describe('SubmitLink Use Case', () => {
       save: mock.fn(),
     } as unknown as ISubmissionRepository;
 
-    const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as any);
+    const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as unknown as WebClient);
     const response = await useCase.execute({
       slackId: 'U123',
       slackLink: validLink,
     });
 
     assert.strictEqual(response.status, 'banned');
-    assert.strictEqual((mockSubmissionRepo.save as any).mock.callCount(), 0);
+    assert.strictEqual((mockSubmissionRepo.save as unknown as { mock: { callCount(): number } }).mock.callCount(), 0);
   });
 
   it('should automatically approve if user is trusted', async () => {
@@ -88,18 +89,19 @@ describe('SubmitLink Use Case', () => {
     } as unknown as IUserRepository;
 
     const mockSubmissionRepo = {
-      save: mock.fn(async (s: any) => ({ ...s.toJSON(), id: 'sub-456' })),
+      save: mock.fn(async (s: { toJSON(): object }) => ({ ...s.toJSON(), id: 'sub-456' })),
       assignNextNumber: mock.fn(async () => 1),
     } as unknown as ISubmissionRepository;
 
-    const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as any);
+    const useCase = new SubmitLink(mockUserRepo, mockSubmissionRepo, mockSlackClient as unknown as WebClient);
     const response = await useCase.execute({
       slackId: 'U123',
       slackLink: validLink,
     });
 
     assert.strictEqual(response.status, 'approved');
-    const savedSubmission = (mockSubmissionRepo.save as any).mock.calls[0].arguments[0];
+    const savedSubmission = (mockSubmissionRepo.save as unknown as { mock: { calls: { arguments: unknown[] }[] } }).mock
+      .calls[0].arguments[0] as { status: string };
     assert.strictEqual(savedSubmission.status, SubmissionStatus.APPROVED);
 
     assert.strictEqual(mockSlackClient.chat.postMessage.mock.callCount(), 0);

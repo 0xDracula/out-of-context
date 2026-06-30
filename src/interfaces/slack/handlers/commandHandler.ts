@@ -1,4 +1,5 @@
 import type { App } from '@slack/bolt';
+import type { KnownBlock } from '@slack/types';
 import { DeleteSubmission } from '../../../application/use-cases/DeleteSubmission.js';
 import { GetUserStatus } from '../../../application/use-cases/GetUserStatus.js';
 import { PrismaSubmissionRepository } from '../../../infrastructure/repositories/PrismaSubmissionRepository.js';
@@ -40,7 +41,7 @@ export const registerCommandHandlers = (app: App) => {
           : 'Member (not trusted)';
 
     const totalRejected = status.stats.rejected + status.stats.explicit;
-    const blocks: any[] = [
+    const blocks: KnownBlock[] = [
       {
         type: 'header',
         text: {
@@ -157,7 +158,7 @@ export const registerCommandHandlers = (app: App) => {
         return;
       }
 
-      const blocks: any[] = [
+      const blocks: KnownBlock[] = [
         {
           type: 'header',
           text: {

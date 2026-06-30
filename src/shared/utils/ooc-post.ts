@@ -1,9 +1,9 @@
-import { WebClient } from '@slack/web-api';
+import type { WebClient } from '@slack/web-api';
 import { config } from '../../config/index.js';
 import type { ISubmissionRepository } from '../../domain/interfaces/ISubmissionRepository.js';
+import { logger } from './logger.js';
 import { fetchOriginalMessage } from './slack-message-fetcher.js';
 import { fetchUserProfile, type SlackUserProfile } from './slack-user-profile.js';
-import { logger } from './logger.js';
 
 interface OriginalContent {
   text: string;
@@ -42,7 +42,8 @@ async function drainQueue(): Promise<void> {
   isProcessing = true;
 
   while (taskQueue.length > 0) {
-    const task = taskQueue.shift()!;
+    const task = taskQueue.shift();
+    if (!task) break;
     try {
       await runPost(task);
     } catch (err) {
@@ -140,7 +141,7 @@ async function postFallback(
 function parseSlackLink(link: string): { msgTs?: number; footerText: string } {
   const isFileLink = link.includes('/files/');
   const tsMatch = !isFileLink ? link.match(/\/p(\d{10})/) : null;
-  const msgTs = tsMatch ? Number.parseInt(tsMatch[1]) : undefined;
+  const msgTs = tsMatch ? Number.parseInt(tsMatch[1], 10) : undefined;
   const channelMatch = !isFileLink ? link.match(/\/archives\/([A-Z0-9]+)\//) : null;
   const channelId = channelMatch?.[1];
   const footerText = channelId?.startsWith('C') ? `Posted in <#${channelId}>` : 'Posted in a Direct Message';
@@ -152,14 +153,14 @@ function buildImageBlocks(
   slackLink: string,
   text: string | undefined,
   fileId: string,
-): any[] {
-  const authorElements: any[] = [];
+): object[] {
+  const authorElements: object[] = [];
   if (author.iconUrl) {
     authorElements.push({ type: 'image', image_url: author.iconUrl, alt_text: author.displayName });
   }
   authorElements.push({ type: 'mrkdwn', text: `*<${slackLink}|${author.displayName}>*` });
 
-  const blocks: any[] = [{ type: 'context', elements: authorElements }];
+  const blocks: object[] = [{ type: 'context', elements: authorElements }];
   if (text) blocks.push({ type: 'section', text: { type: 'mrkdwn', text } });
   blocks.push({ type: 'image', slack_file: { id: fileId }, alt_text: 'image' });
   return blocks;
@@ -168,9 +169,9 @@ function buildImageBlocks(
 async function sendOocMessage(
   client: WebClient,
   submitter: SlackUserProfile,
-  payload: { blocks?: any[]; attachments?: any[]; text?: string; unfurl_links?: boolean },
+  payload: { blocks?: object[]; attachments?: object[]; text?: string; unfurl_links?: boolean },
 ): Promise<string | undefined> {
-  const result = await (client.chat.postMessage as any)({
+  const result = await (client.chat.postMessage as (args: object) => Promise<{ ts?: string }>)({
     channel: config.slack.oocChannelId,
     username: submitter.displayName,
     icon_url: submitter.iconUrl,

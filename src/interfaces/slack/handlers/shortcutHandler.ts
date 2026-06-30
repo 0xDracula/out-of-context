@@ -19,18 +19,20 @@ export const registerShortcutHandler = (app: App) => {
     const s = shortcut as MessageShortcut;
     const slackId = s.user.id;
     const channelId = s.channel.id;
-    const msg = s.message as any;
+    type SlackFile = { mimetype?: string; url_private?: string };
+    type Msg = { text?: string; user?: string; files?: SlackFile[] };
+    const msg = s.message as Msg;
     const domain = s.team?.domain ?? s.user.team_id ?? 'hackclub';
     const slackLink = buildPermalink(domain, channelId, s.message_ts);
 
-    const imageFile = msg.files?.find((f: any) => f.mimetype?.startsWith('image/'));
+    const imageFile = msg.files?.find((f) => f.mimetype?.startsWith('image/'));
 
     const result = await submitLink.execute({
       slackId,
       slackLink,
-      originalText: (msg.text as string | undefined) || undefined,
-      originalAuthorId: (msg.user as string | undefined) || undefined,
-      originalImageUrl: imageFile?.url_private as string | undefined,
+      originalText: msg.text || undefined,
+      originalAuthorId: msg.user || undefined,
+      originalImageUrl: imageFile?.url_private,
     });
 
     await client.chat.postMessage({ channel: slackId, text: result.message }).catch((e: unknown) => {

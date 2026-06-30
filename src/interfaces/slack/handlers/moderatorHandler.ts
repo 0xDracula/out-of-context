@@ -1,4 +1,5 @@
 import type { App } from '@slack/bolt';
+import type { KnownBlock } from '@slack/types';
 import { ReviewSubmission } from '../../../application/use-cases/ReviewSubmission.js';
 import { UpdateUserRole } from '../../../application/use-cases/UpdateUserRole.js';
 import { UpdateUserTrust } from '../../../application/use-cases/UpdateUserTrust.js';
@@ -59,7 +60,7 @@ export const registerModeratorHandlers = (app: App) => {
       return;
     }
 
-    const blocks: any[] = [
+    const blocks: KnownBlock[] = [
       {
         type: 'header',
         text: { type: 'plain_text', text: '📋 Moderation Queue', emoji: true },
@@ -472,7 +473,11 @@ export const registerModeratorHandlers = (app: App) => {
   /**
    * Action handlers for Approve/Reject
    */
-  const handleReview = async (submissionId: string, moderatorId: string, action: any) => {
+  const handleReview = async (
+    submissionId: string,
+    moderatorId: string,
+    action: 'APPROVE' | 'REJECT_OOC' | 'REJECT_EXPLICIT',
+  ) => {
     return await reviewSubmission.execute({
       submissionId,
       moderatorId,
@@ -486,7 +491,7 @@ export const registerModeratorHandlers = (app: App) => {
       await respond('You do not have permission to review submissions.');
       return;
     }
-    const result = await handleReview((action as any).value, body.user.id, 'APPROVE');
+    const result = await handleReview((action as { value: string }).value, body.user.id, 'APPROVE');
     await respond(result.message);
   });
 
@@ -496,7 +501,7 @@ export const registerModeratorHandlers = (app: App) => {
       await respond('You do not have permission to review submissions.');
       return;
     }
-    const result = await handleReview((action as any).value, body.user.id, 'REJECT_OOC');
+    const result = await handleReview((action as { value: string }).value, body.user.id, 'REJECT_OOC');
     await respond(result.message);
   });
 
@@ -506,7 +511,7 @@ export const registerModeratorHandlers = (app: App) => {
       await respond('You do not have permission to review submissions.');
       return;
     }
-    const result = await handleReview((action as any).value, body.user.id, 'REJECT_EXPLICIT');
+    const result = await handleReview((action as { value: string }).value, body.user.id, 'REJECT_EXPLICIT');
     await respond(result.message);
   });
 };

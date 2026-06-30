@@ -27,7 +27,8 @@ async function fetchWithClient(client: WebClient, channelId: string, ts: string)
   const message = result.messages?.[0];
   if (!message) return null;
 
-  const file = (message as any).files?.[0];
+  type SlackFile = { mimetype?: string; url_private?: string };
+  const file = (message as { files?: SlackFile[] }).files?.[0];
   const imageUrl = file?.mimetype?.startsWith('image/') ? (file.url_private as string | undefined) : undefined;
 
   return {
@@ -49,8 +50,7 @@ export async function fetchOriginalMessage(client: WebClient, slackLink: string)
     try {
       const result = await fetchWithClient(userClient, channelId, ts);
       if (result) return result;
-    } catch {
-    }
+    } catch {}
   }
 
   try {

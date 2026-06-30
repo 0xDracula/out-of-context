@@ -2,6 +2,7 @@ import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { DeleteSubmission } from '../../../src/application/use-cases/DeleteSubmission.js';
 import { SubmissionStatus } from '../../../src/domain/entities/Submission.js';
+import type { ISubmissionRepository } from '../../../src/domain/interfaces/ISubmissionRepository.js';
 
 describe('DeleteSubmission Use Case', () => {
   it('should successfully delete a pending submission belonging to the user', async () => {
@@ -14,7 +15,7 @@ describe('DeleteSubmission Use Case', () => {
       delete: mock.fn(async () => {}),
     };
 
-    const useCase = new DeleteSubmission(mockSubRepo as any);
+    const useCase = new DeleteSubmission(mockSubRepo as unknown as ISubmissionRepository);
     const result = await useCase.execute({
       slackId: 'U123',
       submissionId: 'sub-1',
@@ -34,7 +35,7 @@ describe('DeleteSubmission Use Case', () => {
       delete: mock.fn(),
     };
 
-    const useCase = new DeleteSubmission(mockSubRepo as any);
+    const useCase = new DeleteSubmission(mockSubRepo as unknown as ISubmissionRepository);
     const result = await useCase.execute({
       slackId: 'U123',
       submissionId: 'sub-1',
@@ -54,7 +55,7 @@ describe('DeleteSubmission Use Case', () => {
       delete: mock.fn(),
     };
 
-    const useCase = new DeleteSubmission(mockSubRepo as any);
+    const useCase = new DeleteSubmission(mockSubRepo as unknown as ISubmissionRepository);
     const result = await useCase.execute({
       slackId: 'U123',
       submissionId: 'sub-1',
