@@ -64,10 +64,12 @@ async function runPost(task: PostTask): Promise<void> {
 
   const content = originalContent ?? (await resolveContent(client, slackLink));
 
-  if (content) {
-    await postWithContent(client, slackLink, submitterId, content, submissionNumber);
-  } else {
-    await postFallback(client, slackLink, submitterId, submissionNumber);
+  const postedTs = content
+    ? await postWithContent(client, slackLink, submitterId, content, submissionNumber)
+    : await postFallback(client, slackLink, submitterId, submissionNumber);
+
+  if (repo && submissionId && postedTs) {
+    await repo.markPosted(submissionId, config.slack.oocChannelId, postedTs);
   }
 }
 
@@ -85,7 +87,7 @@ async function postWithContent(
   submitterId: string,
   content: OriginalContent,
   submissionNumber?: number,
-): Promise<void> {
+): Promise<string | undefined> {
   const [submitter, author] = await Promise.all([
     fetchUserProfile(client, submitterId),
     fetchUserProfile(client, content.authorId),
@@ -93,22 +95,20 @@ async function postWithContent(
 
   const { msgTs, footerText } = parseSlackLink(slackLink);
 
-  let postedTs: string | undefined;
-
   if (content.imageUrl) {
     const fileId = await reuploadSlackImage(client, content.imageUrl);
     if (fileId) {
-      postedTs = await sendOocMessage(client, submitter, {
+      const postedTs = await sendOocMessage(client, submitter, {
         text: content.text || slackLink,
         blocks: buildImageBlocks(author, slackLink, content.text, fileId),
         attachments: [{ color: '#DDDDDD', fallback: content.text || slackLink, footer: footerText, ts: msgTs }],
       });
       await postSubmissionNumber(client, postedTs, submissionNumber);
-      return;
+      return postedTs;
     }
   }
 
-  postedTs = await sendOocMessage(client, submitter, {
+  const postedTs = await sendOocMessage(client, submitter, {
     attachments: [
       {
         color: '#DDDDDD',
@@ -125,6 +125,7 @@ async function postWithContent(
     ],
   });
   await postSubmissionNumber(client, postedTs, submissionNumber);
+  return postedTs;
 }
 
 async function postFallback(
@@ -132,10 +133,11 @@ async function postFallback(
   slackLink: string,
   submitterId: string,
   submissionNumber?: number,
-): Promise<void> {
+): Promise<string | undefined> {
   const submitter = await fetchUserProfile(client, submitterId);
   const postedTs = await sendOocMessage(client, submitter, { text: slackLink, unfurl_links: true });
   await postSubmissionNumber(client, postedTs, submissionNumber);
+  return postedTs;
 }
 
 function parseSlackLink(link: string): { msgTs?: number; footerText: string } {

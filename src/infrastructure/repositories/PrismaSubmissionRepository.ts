@@ -19,6 +19,31 @@ export class PrismaSubmissionRepository implements ISubmissionRepository {
       originalText: submission.originalText || undefined,
       originalAuthorId: submission.originalAuthorId || undefined,
       originalImageUrl: submission.originalImageUrl || undefined,
+      postedChannelId: submission.postedChannelId || undefined,
+      postedMessageTs: submission.postedMessageTs || undefined,
+      createdAt: submission.createdAt,
+      updatedAt: submission.updatedAt,
+    });
+  }
+
+  async findByPostedMessage(channelId: string, messageTs: string): Promise<Submission | null> {
+    const submission = await db.submission.findFirst({
+      where: { postedChannelId: channelId, postedMessageTs: messageTs, deletedAt: null },
+    });
+
+    if (!submission) return null;
+
+    return new Submission({
+      id: submission.id,
+      slackLink: submission.slackLink,
+      status: submission.status as SubmissionStatus,
+      submitterId: submission.submitterId,
+      moderatorNotes: submission.moderatorNotes || undefined,
+      originalText: submission.originalText || undefined,
+      originalAuthorId: submission.originalAuthorId || undefined,
+      originalImageUrl: submission.originalImageUrl || undefined,
+      postedChannelId: submission.postedChannelId || undefined,
+      postedMessageTs: submission.postedMessageTs || undefined,
       createdAt: submission.createdAt,
       updatedAt: submission.updatedAt,
     });
@@ -118,5 +143,12 @@ export class PrismaSubmissionRepository implements ISubmissionRepository {
       RETURNING "submissionNumber"
     `;
     return result[0].submissionNumber;
+  }
+
+  async markPosted(id: string, channelId: string, messageTs: string): Promise<void> {
+    await db.submission.update({
+      where: { id },
+      data: { postedChannelId: channelId, postedMessageTs: messageTs },
+    });
   }
 }

@@ -1,5 +1,7 @@
 import type { App, MessageShortcut } from '@slack/bolt';
+import { DeleteOocPost } from '../../../application/use-cases/DeleteOocPost.js';
 import { SubmitLink } from '../../../application/use-cases/SubmitLink.js';
+import { config } from '../../../config/index.js';
 import { PrismaSubmissionRepository } from '../../../infrastructure/repositories/PrismaSubmissionRepository.js';
 import { PrismaUserRepository } from '../../../infrastructure/repositories/PrismaUserRepository.js';
 
@@ -12,6 +14,32 @@ function buildPermalink(domain: string, channelId: string, ts: string): string {
 
 export const registerShortcutHandler = (app: App) => {
   const submitLink = new SubmitLink(userRepository, submissionRepository, app.client);
+  const deleteOocPost = new DeleteOocPost(submissionRepository, app.client);
+
+  app.shortcut('delete_ooc_post', async ({ shortcut, ack, client, logger }) => {
+    await ack();
+
+    const s = shortcut as MessageShortcut;
+    const requesterId = s.user.id;
+    const channelId = s.channel.id;
+
+    if (channelId !== config.slack.oocChannelId) {
+      await client.chat
+        .postEphemeral({
+          channel: channelId,
+          user: requesterId,
+          text: 'This shortcut only works on posts in #out-of-context.',
+        })
+        .catch((e: unknown) => logger.error('[shortcut] Failed to send ephemeral message:', e));
+      return;
+    }
+
+    const result = await deleteOocPost.execute({ requesterId, channelId, messageTs: s.message_ts });
+
+    await client.chat
+      .postEphemeral({ channel: channelId, user: requesterId, text: result.message })
+      .catch((e: unknown) => logger.error('[shortcut] Failed to send ephemeral message:', e));
+  });
 
   app.shortcut('submit_to_ooc', async ({ shortcut, ack, client, logger }) => {
     await ack();

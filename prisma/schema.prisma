@@ -50,6 +50,8 @@ model Submission {
   originalText     String?
   originalAuthorId String?
   originalImageUrl String?
+  postedChannelId  String?
+  postedMessageTs  String?
 
   submitterId    String
   submitter      User             @relation(fields: [submitterId], references: [slackId])

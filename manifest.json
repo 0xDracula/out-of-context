@@ -20,6 +20,12 @@
         "type": "message",
         "callback_id": "submit_to_ooc",
         "description": "Submit this message for review to appear in #out-of-context"
+      },
+      {
+        "name": "Delete my #out-of-context post",
+        "type": "message",
+        "callback_id": "delete_ooc_post",
+        "description": "Remove this post from #out-of-context (original author only)"
       }
     ],
     "slash_commands": [

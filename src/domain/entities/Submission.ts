@@ -14,6 +14,8 @@ export interface SubmissionProps {
   originalText?: string;
   originalAuthorId?: string;
   originalImageUrl?: string;
+  postedChannelId?: string;
+  postedMessageTs?: string;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date;
@@ -47,6 +49,12 @@ export class Submission {
   }
   get originalImageUrl(): string | undefined {
     return this.props.originalImageUrl;
+  }
+  get postedChannelId(): string | undefined {
+    return this.props.postedChannelId;
+  }
+  get postedMessageTs(): string | undefined {
+    return this.props.postedMessageTs;
   }
   get createdAt(): Date | undefined {
     return this.props.createdAt;
