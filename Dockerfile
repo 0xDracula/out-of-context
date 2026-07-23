@@ -22,4 +22,4 @@ COPY --from=build /app/dist ./dist
 COPY manifest.json ./
 
 EXPOSE 3001
-CMD ["node", "./dist/app.js"]
+CMD ["npm", "start"]
