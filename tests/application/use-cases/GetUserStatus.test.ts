@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { GetUserStatus } from '../../../src/application/use-cases/GetUserStatus.js';
 import { SubmissionStatus } from '../../../src/domain/entities/Submission.js';
-import { OptInStatus, User, UserRole } from '../../../src/domain/entities/User.js';
+import { User, UserRole } from '../../../src/domain/entities/User.js';
 import type { ISubmissionRepository } from '../../../src/domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../../src/domain/interfaces/IUserRepository.js';
 
@@ -27,8 +27,7 @@ describe('GetUserStatus Use Case', () => {
       role: UserRole.USER,
       isTrusted: true,
       isBanned: false,
-      optInStatus: OptInStatus.OPTED_IN,
-      cocAccepted: true,
+      optedOut: false,
       approvedCount: 5,
       rejectedCount: 1,
       explicitRejectionCount: 0,

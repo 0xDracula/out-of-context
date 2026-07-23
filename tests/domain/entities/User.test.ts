@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { config } from '../../../src/config/index.js';
-import { OptInStatus, User, UserRole } from '../../../src/domain/entities/User.js';
+import { User, UserRole } from '../../../src/domain/entities/User.js';
 
 describe('User Entity', () => {
   const mockConfig = {
@@ -20,8 +20,7 @@ describe('User Entity', () => {
       role: UserRole.USER,
       isTrusted: false,
       isBanned: false,
-      optInStatus: OptInStatus.DEFAULT,
-      cocAccepted: false,
+      optedOut: false,
       approvedCount: 5,
       rejectedCount: 0,
       explicitRejectionCount: 0,
@@ -36,8 +35,7 @@ describe('User Entity', () => {
       role: UserRole.USER,
       isTrusted: false,
       isBanned: false,
-      optInStatus: OptInStatus.DEFAULT,
-      cocAccepted: false,
+      optedOut: false,
       approvedCount: 10,
       rejectedCount: 0,
       explicitRejectionCount: 1,
@@ -52,8 +50,7 @@ describe('User Entity', () => {
       role: UserRole.USER,
       isTrusted: false,
       isBanned: false,
-      optInStatus: OptInStatus.DEFAULT,
-      cocAccepted: false,
+      optedOut: false,
       approvedCount: 0,
       rejectedCount: 0,
       explicitRejectionCount: 3,
