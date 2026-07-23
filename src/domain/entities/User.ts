@@ -6,19 +6,12 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
 
-export enum OptInStatus {
-  DEFAULT = 'DEFAULT',
-  OPTED_IN = 'OPTED_IN',
-  OPTED_OUT = 'OPTED_OUT',
-}
-
 export interface UserProps {
   slackId: string;
   role: UserRole;
   isTrusted: boolean;
   isBanned: boolean;
-  optInStatus: OptInStatus;
-  cocAccepted: boolean;
+  optedOut: boolean;
   approvedCount: number;
   rejectedCount: number;
   explicitRejectionCount: number;
@@ -45,14 +38,8 @@ export class User {
   get isBanned(): boolean {
     return this.props.isBanned;
   }
-  get optInStatus(): OptInStatus {
-    return this.props.optInStatus;
-  }
-  get isOptedIn(): boolean {
-    return this.props.optInStatus === OptInStatus.OPTED_IN;
-  }
-  get cocAccepted(): boolean {
-    return this.props.cocAccepted;
+  get optedOut(): boolean {
+    return this.props.optedOut;
   }
   get approvedCount(): number {
     return this.props.approvedCount;

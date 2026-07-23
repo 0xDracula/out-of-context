@@ -80,30 +80,6 @@ export class PrismaSubmissionRepository implements ISubmissionRepository {
     );
   }
 
-  async findWaitingForAuthor(authorId: string): Promise<Submission[]> {
-    const submissions = await db.submission.findMany({
-      where: { originalAuthorId: authorId, status: SubmissionStatus.WAITING_FOR_AUTHOR, deletedAt: null },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    return submissions.map(
-      (s) =>
-        new Submission({
-          id: s.id,
-          slackLink: s.slackLink,
-          status: s.status as SubmissionStatus,
-          submitterId: s.submitterId,
-          moderatorNotes: s.moderatorNotes || undefined,
-          originalText: s.originalText || undefined,
-          originalAuthorId: s.originalAuthorId || undefined,
-          originalImageUrl: s.originalImageUrl || undefined,
-          createdAt: s.createdAt,
-          updatedAt: s.updatedAt,
-          deletedAt: s.deletedAt || undefined,
-        }),
-    );
-  }
-
   async getPendingQueue(): Promise<Submission[]> {
     const submissions = await db.submission.findMany({
       where: { status: SubmissionStatus.PENDING, deletedAt: null },

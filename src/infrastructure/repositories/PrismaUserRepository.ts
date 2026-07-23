@@ -1,5 +1,5 @@
 import { config } from '../../config/index.js';
-import { type OptInStatus, User, UserRole } from '../../domain/entities/User.js';
+import { User, UserRole } from '../../domain/entities/User.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
 import db from '../prisma.js';
 
@@ -21,8 +21,7 @@ export class PrismaUserRepository implements IUserRepository {
       role: role,
       isTrusted: user.isTrusted,
       isBanned: user.isBanned,
-      optInStatus: user.optInStatus as OptInStatus,
-      cocAccepted: user.cocAccepted,
+      optedOut: user.optedOut,
       approvedCount: user.approvedCount,
       rejectedCount: user.rejectedCount,
       explicitRejectionCount: user.explicitRejectionCount,
@@ -39,8 +38,7 @@ export class PrismaUserRepository implements IUserRepository {
         role: data.role,
         isTrusted: data.isTrusted,
         isBanned: data.isBanned,
-        optInStatus: data.optInStatus,
-        cocAccepted: data.cocAccepted,
+        optedOut: data.optedOut,
         approvedCount: data.approvedCount,
         rejectedCount: data.rejectedCount,
         explicitRejectionCount: data.explicitRejectionCount,
@@ -50,8 +48,7 @@ export class PrismaUserRepository implements IUserRepository {
         role: data.role,
         isTrusted: data.isTrusted,
         isBanned: data.isBanned,
-        optInStatus: data.optInStatus,
-        cocAccepted: data.cocAccepted,
+        optedOut: data.optedOut,
         approvedCount: data.approvedCount,
         rejectedCount: data.rejectedCount,
         explicitRejectionCount: data.explicitRejectionCount,
@@ -63,8 +60,7 @@ export class PrismaUserRepository implements IUserRepository {
       role: saved.role as UserRole,
       isTrusted: saved.isTrusted,
       isBanned: saved.isBanned,
-      optInStatus: saved.optInStatus as OptInStatus,
-      cocAccepted: saved.cocAccepted,
+      optedOut: saved.optedOut,
       approvedCount: saved.approvedCount,
       rejectedCount: saved.rejectedCount,
       explicitRejectionCount: saved.explicitRejectionCount,

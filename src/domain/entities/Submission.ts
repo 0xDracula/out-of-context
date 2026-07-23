@@ -3,7 +3,6 @@ export enum SubmissionStatus {
   APPROVED = 'APPROVED',
   REJECTED_NOT_OOC = 'REJECTED_NOT_OOC',
   REJECTED_EXPLICIT = 'REJECTED_EXPLICIT',
-  WAITING_FOR_AUTHOR = 'WAITING_FOR_AUTHOR',
 }
 
 export interface SubmissionProps {

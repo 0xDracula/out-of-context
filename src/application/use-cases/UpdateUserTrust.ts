@@ -1,5 +1,5 @@
 import type { WebClient } from '@slack/web-api';
-import { OptInStatus, User, UserRole } from '../../domain/entities/User.js';
+import { User, UserRole } from '../../domain/entities/User.js';
 import type { IUserRepository } from '../../domain/interfaces/IUserRepository.js';
 import { logger } from '../../shared/utils/logger.js';
 
@@ -35,8 +35,7 @@ export class UpdateUserTrust {
         slackId: request.slackId,
         isTrusted: request.isTrusted,
         isBanned: false,
-        optInStatus: OptInStatus.DEFAULT,
-        cocAccepted: false,
+        optedOut: false,
         approvedCount: 0,
         rejectedCount: 0,
         role: UserRole.USER,
