@@ -3,7 +3,7 @@ import { describe, it, mock } from 'node:test';
 import type { WebClient } from '@slack/web-api';
 import { ReviewSubmission } from '../../../src/application/use-cases/ReviewSubmission.js';
 import { Submission, SubmissionStatus } from '../../../src/domain/entities/Submission.js';
-import { User, UserRole } from '../../../src/domain/entities/User.js';
+import { OptInStatus, User, UserRole } from '../../../src/domain/entities/User.js';
 import type { ISubmissionRepository } from '../../../src/domain/interfaces/ISubmissionRepository.js';
 import type { IUserRepository } from '../../../src/domain/interfaces/IUserRepository.js';
 
@@ -20,7 +20,8 @@ describe('ReviewSubmission Use Case', () => {
     role: UserRole.USER,
     isTrusted: false,
     isBanned: false,
-    optedOut: false,
+    optInStatus: OptInStatus.DEFAULT,
+    cocAccepted: false,
     approvedCount: 0,
     rejectedCount: 0,
     explicitRejectionCount: 0,
@@ -35,6 +36,7 @@ describe('ReviewSubmission Use Case', () => {
     const mockSubRepo = {
       findById: mock.fn(async () => mockSubmission),
       save: mock.fn(async (s) => s),
+      findWaitingForAuthor: mock.fn(async () => []),
       assignNextNumber: mock.fn(async () => 1),
     };
     const mockSlackClient = {

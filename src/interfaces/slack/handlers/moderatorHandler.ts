@@ -78,13 +78,36 @@ export const registerModeratorHandlers = (app: App) => {
     ];
 
     for (const sub of pending) {
+      const authorNote =
+        sub.originalAuthorId && sub.originalAuthorId !== sub.submitterId ? ` · author: <@${sub.originalAuthorId}>` : '';
       blocks.push({
         type: 'section',
         text: {
           type: 'mrkdwn',
-          text: `*Submission from <@${sub.submitterId}>*\n<${sub.slackLink}|View Original Message>`,
+          text: `*Submitted by <@${sub.submitterId}>*${authorNote}\n<${sub.slackLink}|View Original Message>`,
         },
       });
+
+      if (sub.originalText) {
+        const quoted = sub.originalText
+          .slice(0, 2800)
+          .split('\n')
+          .map((line) => `> ${line}`)
+          .join('\n');
+        blocks.push({
+          type: 'section',
+          text: { type: 'mrkdwn', text: quoted },
+        });
+      }
+
+      if (sub.originalImageUrl) {
+        blocks.push({
+          type: 'image',
+          image_url: sub.originalImageUrl,
+          alt_text: 'Submitted image',
+        } as KnownBlock);
+      }
+
       blocks.push({
         type: 'actions',
         elements: [

@@ -64,8 +64,13 @@
         "should_escape": true
       },
       {
+        "command": "/b-opt-in",
+        "description": "Opt in to #out-of-context (lets others submit your messages).",
+        "should_escape": false
+      },
+      {
         "command": "/b-opt-out",
-        "description": "Toggle your opt-out status for #out-of-context submissions.",
+        "description": "Opt out of #out-of-context submissions.",
         "should_escape": false
       }
     ]

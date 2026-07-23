@@ -2,7 +2,7 @@ import type { App } from '@slack/bolt';
 import type { KnownBlock } from '@slack/types';
 import { DeleteSubmission } from '../../../application/use-cases/DeleteSubmission.js';
 import { GetUserStatus } from '../../../application/use-cases/GetUserStatus.js';
-import { ToggleOptOut } from '../../../application/use-cases/ToggleOptOut.js';
+import { OptInStatus, User, UserRole } from '../../../domain/entities/User.js';
 import { PrismaSubmissionRepository } from '../../../infrastructure/repositories/PrismaSubmissionRepository.js';
 import { PrismaUserRepository } from '../../../infrastructure/repositories/PrismaUserRepository.js';
 
@@ -10,7 +10,6 @@ const userRepository = new PrismaUserRepository();
 const submissionRepository = new PrismaSubmissionRepository();
 const getUserStatus = new GetUserStatus(userRepository, submissionRepository);
 const deleteSubmission = new DeleteSubmission(submissionRepository);
-const toggleOptOut = new ToggleOptOut(userRepository);
 
 export const registerCommandHandlers = (app: App) => {
   /**
@@ -202,9 +201,51 @@ export const registerCommandHandlers = (app: App) => {
     }
   });
 
+  app.command('/b-opt-in', async ({ ack, body, respond }) => {
+    await ack();
+    const slackId = body.user_id;
+    const existing = await userRepository.findBySlackId(slackId);
+
+    if (existing?.isOptedIn) {
+      await respond({ text: "You're already opted in to #out-of-context!", response_type: 'ephemeral' });
+      return;
+    }
+
+    const base = existing?.toJSON() ?? {
+      slackId,
+      role: UserRole.USER,
+      isTrusted: false,
+      isBanned: false,
+      optInStatus: OptInStatus.DEFAULT,
+      cocAccepted: false,
+      approvedCount: 0,
+      rejectedCount: 0,
+      explicitRejectionCount: 0,
+    };
+    await userRepository.save(new User({ ...base, optInStatus: OptInStatus.OPTED_IN, cocAccepted: true }));
+    await respond({
+      text: "You've opted in to #out-of-context! Others can now submit your messages, and you can submit theirs. Use `/b-opt-out` to opt back out at any time.",
+      response_type: 'ephemeral',
+    });
+  });
+
   app.command('/b-opt-out', async ({ ack, body, respond }) => {
     await ack();
-    const result = await toggleOptOut.execute(body.user_id);
-    await respond({ text: result.message, response_type: 'ephemeral' });
+    const slackId = body.user_id;
+    const existing = await userRepository.findBySlackId(slackId);
+
+    if (!existing || existing.optInStatus !== OptInStatus.OPTED_IN) {
+      await respond({
+        text: "You're not currently opted in to #out-of-context. Use `/b-opt-in` to opt in.",
+        response_type: 'ephemeral',
+      });
+      return;
+    }
+
+    await userRepository.save(new User({ ...existing.toJSON(), optInStatus: OptInStatus.OPTED_OUT }));
+    await respond({
+      text: "You've opted out of #out-of-context. Your messages won't be submitted to the channel. Use `/b-opt-in` to opt back in at any time.",
+      response_type: 'ephemeral',
+    });
   });
 };

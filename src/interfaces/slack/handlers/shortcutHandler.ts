@@ -36,11 +36,11 @@ export const registerShortcutHandler = (app: App) => {
     });
 
     if (result.status === 'opted_out') {
-      await client.chat
-        .postEphemeral({ channel: channelId, user: slackId, text: result.message })
-        .catch((e: unknown) => {
-          logger.error('[shortcut] Failed to send opted-out ephemeral:', e);
+      if (result.message) {
+        await client.chat.postMessage({ channel: slackId, text: result.message }).catch((e: unknown) => {
+          logger.error('[shortcut] Failed to DM user:', e);
         });
+      }
       return;
     }
 

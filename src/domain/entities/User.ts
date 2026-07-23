@@ -6,12 +6,19 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
 }
 
+export enum OptInStatus {
+  DEFAULT = 'DEFAULT',
+  OPTED_IN = 'OPTED_IN',
+  OPTED_OUT = 'OPTED_OUT',
+}
+
 export interface UserProps {
   slackId: string;
   role: UserRole;
   isTrusted: boolean;
   isBanned: boolean;
-  optedOut: boolean;
+  optInStatus: OptInStatus;
+  cocAccepted: boolean;
   approvedCount: number;
   rejectedCount: number;
   explicitRejectionCount: number;
@@ -38,8 +45,14 @@ export class User {
   get isBanned(): boolean {
     return this.props.isBanned;
   }
-  get optedOut(): boolean {
-    return this.props.optedOut;
+  get optInStatus(): OptInStatus {
+    return this.props.optInStatus;
+  }
+  get isOptedIn(): boolean {
+    return this.props.optInStatus === OptInStatus.OPTED_IN;
+  }
+  get cocAccepted(): boolean {
+    return this.props.cocAccepted;
   }
   get approvedCount(): number {
     return this.props.approvedCount;
@@ -64,9 +77,6 @@ export class User {
     this.props.updatedAt = new Date();
   }
 
-  /**
-   * Business Logic: Determine if a user should be promoted to Trusted.
-   */
   isEligibleForTrust(config: Config): boolean {
     if (this.props.isTrusted) return true;
     if (this.props.isBanned) return false;
@@ -77,11 +87,6 @@ export class User {
     return meetsApprovalThreshold && meetsExplicitThreshold;
   }
 
-  /**
-   * Business Logic: Determine if a user should be automatically banned based on explicit rejections.
-   * Note: The rolling window logic will be handled at the Repository/Service level by counting
-   * recent rejections, but the entity holds the overall count.
-   */
   shouldBeBanned(config: Config): boolean {
     if (this.props.isBanned) return true;
     return this.props.explicitRejectionCount >= config.moderation.explicitRejectionsBeforeBan;
